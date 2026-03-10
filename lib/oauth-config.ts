@@ -47,26 +47,33 @@ function getEnvCredentials(provider: string): { clientId?: string; clientSecret?
 }
 
 export async function getOAuthConfig(): Promise<OAuthConfig> {
-  const config = await getConfig('oauth_config');
-  
-  if (!config) {
-    return defaultOAuthConfig;
-  }
-  
-  const result: OAuthConfig = {}
-  
-  for (const [provider, providerConfig] of Object.entries(config)) {
-    if (typeof providerConfig === 'object' && providerConfig !== null) {
-      const envCreds = getEnvCredentials(provider)
-      result[provider] = {
-        enabled: (providerConfig as any).enabled ?? false,
-        clientId: envCreds.clientId,
-        clientSecret: envCreds.clientSecret,
+  try {
+    const config = await getConfig('oauth_config');
+    
+    if (!config) {
+      console.log('[OAuth Config] No config found, using defaults');
+      return defaultOAuthConfig;
+    }
+    
+    const result: OAuthConfig = {}
+    
+    for (const [provider, providerConfig] of Object.entries(config)) {
+      if (typeof providerConfig === 'object' && providerConfig !== null) {
+        const envCreds = getEnvCredentials(provider)
+        result[provider] = {
+          enabled: (providerConfig as any).enabled ?? false,
+          clientId: envCreds.clientId,
+          clientSecret: envCreds.clientSecret,
+        }
       }
     }
+    
+    console.log('[OAuth Config] Loaded config:', JSON.stringify(result));
+    return result
+  } catch (error) {
+    console.error('[OAuth Config] Error loading config:', error);
+    return defaultOAuthConfig;
   }
-  
-  return result
 }
 
 export async function isOAuthProviderEnabled(provider: string): Promise<boolean> {
