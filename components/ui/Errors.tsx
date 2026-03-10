@@ -5,11 +5,11 @@
 
 import React, { useContext } from 'react'
 import { ThemeContext } from '@/contexts/ThemeContext'
-import { getThemeClassNames } from '@/lib/theme'
+import { getThemeClassNames, defaultTheme } from '@/lib/theme'
 
 const useThemeSafe = () => {
   const context = useContext(ThemeContext)
-  return context?.cn ?? getThemeClassNames()
+  return context?.cn ?? getThemeClassNames(defaultTheme)
 }
 
 interface ErrorMessageProps {
