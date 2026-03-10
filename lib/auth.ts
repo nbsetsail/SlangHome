@@ -241,6 +241,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             throw error
           }
           console.error('Authorization error:', error)
+          console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+          console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
           return null
         }
       }
