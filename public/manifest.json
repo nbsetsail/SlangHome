@@ -1,0 +1,23 @@
+{
+  "name": "Slang Home - Your Ultimate Slang Dictionary",
+  "short_name": "Slang Home",
+  "description": "Discover and learn the latest slang words and phrases. Your comprehensive dictionary for modern slang.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#3b82f6",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-US",
+  "categories": ["education", "reference"],
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

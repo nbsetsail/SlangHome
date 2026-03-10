@@ -1,0 +1,68 @@
+# Binaries
+.bin/
+
+# Build output
+.next/
+out/
+build/
+dist/
+
+# IDE
+.idea/
+.trae/
+.qoder/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.prod
+.env.example
+.env.*.local
+
+#Environment Dependencies
+package.json
+package-lock.json
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# MeiliSearch
+.meilisearch/
+
+# Test
+coverage/
+loadtest/
+
+# Temp
+*.tmp
+*.temp
+
+#Migrations
+migrations/
+
+# Mock
+mock/
+
+# Doc
+doc/
+
+#Backup
+backups/
+
+
+
+
