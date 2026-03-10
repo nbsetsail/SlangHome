@@ -1,4 +1,4 @@
-import { executeQuery, getQuery, beginTransaction, commitTransaction, rollbackTransaction, smartUpdate } from '../db';
+import { executeQuery, getQuery, beginTransaction, commitTransaction, rollbackTransaction, smartUpdate, smartInsert } from '../db';
 import { getUTCTimestamp } from '../date-utils';
 
 export interface SlangVersion {
