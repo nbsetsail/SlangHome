@@ -29,10 +29,6 @@ node_modules/
 .env.example
 .env.*.local
 
-#Environment Dependencies
-package.json
-package-lock.json
-
 # Logs
 logs/
 *.log
