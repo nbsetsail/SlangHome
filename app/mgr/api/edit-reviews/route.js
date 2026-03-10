@@ -31,7 +31,7 @@ export async function GET(request) {
     }
 
     let whereConditions = ['er.status = $1'];
-    const params: any[] = [status];
+    const params = [status];
     let paramIndex = 2;
 
     if (locale) {

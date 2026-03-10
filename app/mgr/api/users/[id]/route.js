@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getQuery, runQuery } from '@/lib/db-adapter'
-import { checkMgrAuth, unauthorizedResponse } from '../auth';
+import { checkMgrAuth, unauthorizedResponse } from '../../auth';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
