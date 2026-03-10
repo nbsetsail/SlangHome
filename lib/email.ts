@@ -1,6 +1,6 @@
-import nodemailer from 'nodemailer'
+import nodemailer, { TransportOptions } from 'nodemailer'
+import SMTPTransport from 'nodemailer/lib/smtp-transport'
 
-// Email configuration interface
 export interface EmailConfig {
   host: string
   port: number
@@ -11,14 +11,12 @@ export interface EmailConfig {
   password?: string
 }
 
-// Email template interface
 export interface EmailTemplate {
   subject: string
   html: string
   text: string
 }
 
-// Email service class
 export class EmailService {
   private transporter: nodemailer.Transporter
   private config: EmailConfig
@@ -26,7 +24,7 @@ export class EmailService {
   constructor(config: EmailConfig) {
     this.config = config
     
-    const transportOptions: nodemailer.TransportOptions = {
+    const transportOptions: SMTPTransport.Options = {
       host: config.host,
       port: config.port,
       secure: config.secure,
@@ -38,7 +36,7 @@ export class EmailService {
     }
     
     if (config.user && config.password) {
-      (transportOptions as any).auth = {
+      transportOptions.auth = {
         user: config.user,
         pass: config.password
       }
