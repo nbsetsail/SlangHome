@@ -56,6 +56,9 @@ mock/
 # Doc
 doc/
 
+# Archive
+archive/
+
 #Backup
 backups/
 
