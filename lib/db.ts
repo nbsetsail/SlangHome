@@ -1,15 +1,16 @@
 import { Pool } from 'pg';
 import { getUTCTimestamp } from './date-utils';
 
-const USE_NEON = !!process.env.DATABASE_URL || !!process.env.POSTGRES_URL;
+const USE_NEON = !!process.env.DATABASE_URL || !!process.env.DATABASE_URL_POOLED || !!process.env.POSTGRES_URL;
 
 let pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!pool) {
-    if (process.env.DATABASE_URL || process.env.POSTGRES_URL) {
+    const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_POOLED || process.env.POSTGRES_URL;
+    if (connectionString) {
       pool = new Pool({
-        connectionString: process.env.DATABASE_URL || process.env.POSTGRES_URL,
+        connectionString,
         ssl: { rejectUnauthorized: false },
         max: 10,
         idleTimeoutMillis: 30000,
