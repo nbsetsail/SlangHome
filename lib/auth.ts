@@ -137,7 +137,10 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
         try {
           const { email, password } = credentials || {}
           
+          console.log('[auth] Authorize called, email:', email ? 'provided' : 'missing', 'password:', password ? 'provided' : 'missing')
+          
           if (!email || !password) {
+            console.log('[auth] Missing email or password')
             return null
           }
           
@@ -145,8 +148,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
           const rateLimitResult = checkLoginRateLimit(emailStr)
           
           if (!rateLimitResult.allowed) {
+            console.log('[auth] Rate limited for:', emailStr)
             throw new Error('RATE_LIMITED')
           }
+          
+          console.log('[auth] Querying database for user:', emailStr)
           
           let user = await getQuery(
             `SELECT u.id, u.username, u.display_name, u.email, u.password, u.role, u.status, 
@@ -157,6 +163,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             [emailStr]
           )
           
+          console.log('[auth] User found by email:', !!user)
+          
           if (!user) {
             user = await getQuery(
               `SELECT u.id, u.username, u.display_name, u.email, u.password, u.role, u.status, 
@@ -166,9 +174,11 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
                FROM users u WHERE u.username = $1`,
               [emailStr]
             )
+            console.log('[auth] User found by username:', !!user)
           }
           
           if (!user) {
+            console.log('[auth] User not found:', emailStr)
             recordFailedLogin(emailStr)
             await logLogin({
               username: emailStr,
@@ -178,9 +188,12 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             return null
           }
           
+          console.log('[auth] Comparing password for user:', user.username)
           const passwordMatch = await bcrypt.compare(String(password), user.password)
+          console.log('[auth] Password match:', passwordMatch)
           
           if (!passwordMatch) {
+            console.log('[auth] Invalid password for user:', user.username)
             recordFailedLogin(emailStr)
             await logLogin({
               userId: user.id,
@@ -211,6 +224,8 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
             throw new Error('ACCOUNT_INACTIVE')
           }
           
+          console.log('[auth] Login successful for user:', user.username)
+          
           await logLogin({
             userId: user.id,
             username: user.username,
@@ -240,9 +255,9 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
               error.message === 'RATE_LIMITED')) {
             throw error
           }
-          console.error('Authorization error:', error)
-          console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
-          console.error('Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
+          console.error('[auth] Authorization error:', error)
+          console.error('[auth] Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+          console.error('[auth] Error details:', JSON.stringify(error, Object.getOwnPropertyNames(error), 2))
           return null
         }
       }

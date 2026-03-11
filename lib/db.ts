@@ -6,21 +6,32 @@ function getNeonConnectionString(): string {
   // 1. 手动配置的连接池 URL
   const pooledUrl = process.env.DATABASE_URL_POOLED || process.env.POSTGRES_URL_POOLED;
   if (pooledUrl) {
+    console.log('[db] Using DATABASE_URL_POOLED or POSTGRES_URL_POOLED');
     return pooledUrl;
   }
   
   // 2. Neon 自动注入的连接池 URL (Vercel Integration)
   const neonPooledUrl = process.env.POSTGRES_URL;
   if (neonPooledUrl && neonPooledUrl.includes('pooler')) {
+    console.log('[db] Using POSTGRES_URL (pooler detected)');
     return neonPooledUrl;
   }
   
   // 3. 直接连接 (警告：不适合 Serverless)
   const directUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
   if (directUrl) {
-    console.warn('⚠️ Using direct connection. Consider using pooled connection for Vercel/Serverless.');
+    console.warn('[db] ⚠️ Using direct connection. Consider using pooled connection for Vercel/Serverless.');
     return directUrl;
   }
+  
+  console.error('[db] ❌ No database connection string found!');
+  console.error('[db] Available env vars:', {
+    DATABASE_URL_POOLED: !!process.env.DATABASE_URL_POOLED,
+    POSTGRES_URL_POOLED: !!process.env.POSTGRES_URL_POOLED,
+    POSTGRES_URL: !!process.env.POSTGRES_URL,
+    DATABASE_URL: !!process.env.DATABASE_URL,
+    POSTGRES_URL_NON_POOLING: !!process.env.POSTGRES_URL_NON_POOLING,
+  });
   
   return '';
 }
@@ -40,7 +51,7 @@ function getPool(): Pool {
         idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 10000,
       });
-      console.log('✅ Neon PostgreSQL connection pool created (Serverless optimized)');
+      console.log('[db] ✅ Neon PostgreSQL connection pool created (Serverless optimized)');
     } else {
       pool = new Pool({
         host: process.env.POSTGRES_HOST || 'localhost',
@@ -52,7 +63,7 @@ function getPool(): Pool {
         idleTimeoutMillis: 30000,
         connectionTimeoutMillis: 10000,
       });
-      console.log('✅ Local PostgreSQL connection pool created');
+      console.log('[db] ✅ Local PostgreSQL connection pool created');
     }
   }
   return pool;
