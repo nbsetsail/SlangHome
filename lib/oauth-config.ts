@@ -48,22 +48,19 @@ function getEnvCredentials(provider: string): { clientId?: string; clientSecret?
 
 export async function getOAuthConfig(): Promise<OAuthConfig> {
   try {
-    const config = await getConfig('oauth_config');
+    const dbConfig = await getConfig('oauth_config');
     
-    if (!config) {
-      console.log('[OAuth Config] No config found, using defaults');
-      return defaultOAuthConfig;
-    }
+    const result: OAuthConfig = { ...defaultOAuthConfig }
     
-    const result: OAuthConfig = {}
-    
-    for (const [provider, providerConfig] of Object.entries(config)) {
-      if (typeof providerConfig === 'object' && providerConfig !== null) {
-        const envCreds = getEnvCredentials(provider)
-        result[provider] = {
-          enabled: (providerConfig as any).enabled ?? false,
-          clientId: envCreds.clientId,
-          clientSecret: envCreds.clientSecret,
+    if (dbConfig && typeof dbConfig === 'object') {
+      for (const [provider, providerConfig] of Object.entries(dbConfig)) {
+        if (typeof providerConfig === 'object' && providerConfig !== null) {
+          const envCreds = getEnvCredentials(provider)
+          result[provider.toLowerCase()] = {
+            enabled: (providerConfig as any).enabled ?? false,
+            clientId: envCreds.clientId,
+            clientSecret: envCreds.clientSecret,
+          }
         }
       }
     }

@@ -54,11 +54,11 @@ export default function CookieConsent() {
           <div className="md:col-span-8">
             <p className="text-sm text-gray-700 dark:text-gray-300">
               {t('cookies.consent.message')}{' '}
-              <Link href={`/${locale}/privacy-policy`} className="text-blue-600 hover:underline font-medium">
+              <Link href={`/${locale}/privacy-policy`} prefetch={false} className="text-blue-600 hover:underline font-medium">
                 {t('cookies.consent.privacyPolicy')}
               </Link>{' '}
               {t('cookies.consent.and')}{' '}
-              <Link href={`/${locale}/cookie-policy`} className="text-blue-600 hover:underline font-medium">
+              <Link href={`/${locale}/cookie-policy`} prefetch={false} className="text-blue-600 hover:underline font-medium">
                 {t('cookies.consent.cookiePolicy')}
               </Link>
               {t('cookies.consent.period')}

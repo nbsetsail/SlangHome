@@ -20,6 +20,7 @@ export function SidebarFooter() {
         <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 mt-3">
           <Link 
             href={`/${locale}/privacy-policy`}
+            prefetch={false}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {t('footer.links.privacyShort')}
@@ -27,6 +28,7 @@ export function SidebarFooter() {
           <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
           <Link 
             href={`/${locale}/terms-of-service`}
+            prefetch={false}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {t('footer.links.termsShort')}
@@ -34,6 +36,7 @@ export function SidebarFooter() {
           <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
           <Link 
             href={`/${locale}/cookie-policy`}
+            prefetch={false}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {t('footer.links.cookiesShort')}
@@ -41,6 +44,7 @@ export function SidebarFooter() {
           <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
           <Link 
             href={`/${locale}/privacy-settings`}
+            prefetch={false}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {t('footer.links.gdprShort')}
@@ -48,6 +52,7 @@ export function SidebarFooter() {
           <span className="text-xs text-gray-300 dark:text-gray-600">·</span>
           <Link 
             href={`/${locale}/community-guidelines`}
+            prefetch={false}
             className="text-xs text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
           >
             {t('footer.links.communityGuidelinesShort')}

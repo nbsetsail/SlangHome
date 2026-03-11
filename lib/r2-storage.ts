@@ -17,7 +17,7 @@ let r2Client: S3Client | null = null;
 
 const LOCAL_UPLOAD_DIR = join(process.cwd(), 'public', 'uploads');
 
-console.log(`🔧 图片存储模式: ${IS_VERCEL ? 'Cloudflare R2' : '本地存储 (public/uploads)'}`);
+console.log(`🔧 Image storage mode: ${IS_VERCEL ? 'Cloudflare R2' : 'Local storage (public/uploads)'}`);
 
 function getR2Client(): S3Client | null {
   if (!IS_VERCEL) {

@@ -13,11 +13,11 @@ function getUpstashRedis(): UpstashRedis {
     const token = process.env.UPSTASH_REDIS_REST_TOKEN;
     
     if (!url || !token) {
-      throw new Error('Upstash Redis 配置缺失。请设置 UPSTASH_REDIS_REST_URL 和 UPSTASH_REDIS_REST_TOKEN');
+      throw new Error('Upstash Redis config missing. Please set UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN');
     }
     
     upstashRedis = new UpstashRedis({ url, token });
-    console.log('✅ Upstash Redis 连接已建立');
+    console.log('✅ Upstash Redis connection established');
   }
   return upstashRedis;
 }
@@ -48,7 +48,7 @@ async function getLocalRedis() {
         port,
         reconnectStrategy: (retries) => {
           if (retries > 10) {
-            console.error('❌ Redis连接重试次数超过限制');
+            console.error('❌ Redis connection retries exceeded');
             return new Error('Redis connection retries exceeded');
           }
           return Math.min(retries * 100, 3000);
@@ -60,23 +60,23 @@ async function getLocalRedis() {
     });
     
     localRedis.on('error', (err) => {
-      console.error('❌ Redis客户端错误:', err.message);
+      console.error('❌ Redis client error:', err.message);
     });
     
     localRedis.on('connect', () => {
-      console.log('📡 Redis连接中...');
+      console.log('📡 Redis connecting...');
     });
     
     localRedis.on('ready', () => {
-      console.log('✅ Redis连接就绪');
+      console.log('✅ Redis connection ready');
     });
     
     await localRedis.connect();
-    console.log(`✅ 本地 Redis 连接成功 - ${host}:${port} DB:${db}`);
+    console.log(`✅ Local Redis connected - ${host}:${port} DB:${db}`);
     
     return localRedis;
   } catch (error) {
-    console.error('❌ Redis初始化失败:', (error as Error).message);
+    console.error('❌ Redis initialization failed:', (error as Error).message);
     localRedis = null;
     throw error;
   } finally {
@@ -98,10 +98,10 @@ export function isUpstash(): boolean {
 export async function initRedis(): Promise<void> {
   if (IS_VERCEL) {
     getUpstashRedis();
-    console.log('✅ Upstash Redis 初始化完成');
+    console.log('✅ Upstash Redis initialized');
   } else {
     await getLocalRedis();
-    console.log('✅ 本地 Redis 初始化完成');
+    console.log('✅ Local Redis initialized');
   }
 }
 
@@ -166,26 +166,26 @@ export async function getRedisInfo(): Promise<any> {
 export function resetRedisConnection(): void {
   if (IS_VERCEL) {
     upstashRedis = null;
-    console.log('🔄 Upstash Redis 连接已重置');
+    console.log('🔄 Upstash Redis connection reset');
   } else {
     if (localRedis) {
       localRedis.quit().catch(() => {});
       localRedis = null;
     }
-    console.log('🔄 本地 Redis 连接已重置');
+    console.log('🔄 Local Redis connection reset');
   }
 }
 
 export async function closeRedis(): Promise<void> {
   if (IS_VERCEL) {
     upstashRedis = null;
-    console.log('✅ Upstash Redis 连接已关闭');
+    console.log('✅ Upstash Redis connection closed');
   } else {
     if (localRedis) {
       await localRedis.quit();
       localRedis = null;
     }
-    console.log('✅ 本地 Redis 连接已关闭');
+    console.log('✅ Local Redis connection closed');
   }
 }
 

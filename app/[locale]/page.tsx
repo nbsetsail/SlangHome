@@ -421,6 +421,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                   <Link
                     href={`/${locale}/discover`}
+                    prefetch="intent"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-purple-600 hover:bg-gray-100 text-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -432,6 +433,7 @@ export default function HomePage() {
                   </Link>
                   <Link
                     href={`/${locale}/subscribe`}
+                    prefetch="intent"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 text-lg font-medium transition-all duration-200 border border-white/30"
                   >
                     {t('home.hero.learnMore')}
@@ -514,6 +516,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/discover`}
+                prefetch="intent"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('home.hero.explore')}
@@ -539,6 +542,7 @@ export default function HomePage() {
                   <Link
                     key={slang.id}
                     href={`/${locale}/slang/${slang.id}`}
+                    prefetch="intent"
                     className={`${cn.colors.bg.card} rounded-lg p-4 border ${cn.colors.border.default} hover:shadow-md transition-shadow duration-200`}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -595,6 +599,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/activities`}
+                prefetch="intent"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('activities.viewAll') || 'View All'}
@@ -610,6 +615,7 @@ export default function HomePage() {
                   <Link
                     key={activity.id}
                     href={`/${locale}/activities?id=${activity.id}`}
+                    prefetch="intent"
                     className={`${cn.colors.bg.card} rounded-lg overflow-hidden border ${cn.colors.border.default} hover:shadow-lg transition-shadow duration-200`}
                   >
                     {activity.image_url ? (
@@ -665,6 +671,7 @@ export default function HomePage() {
                 <p className={cn.colors.text.secondary}>{t('activities.noOngoing')}</p>
                 <Link
                   href={`/${locale}/activities`}
+                  prefetch="intent"
                   className={`inline-flex items-center gap-1 mt-4 text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover}`}
                 >
                   {t('activities.viewAll') || 'View All Activities'}
@@ -690,6 +697,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/subscribe`}
+                prefetch="intent"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('subscribe.latestIssue')}
@@ -737,6 +745,7 @@ export default function HomePage() {
                     
                     <Link
                       href={`/${locale}/subscribe?type=${seriesType.type}`}
+                      prefetch="intent"
                       className={`w-full py-2 rounded-lg text-sm font-medium ${cn.primaryButton} flex items-center justify-center gap-2`}
                     >
                       {t('subscribe.viewDetails') || 'View Details'}

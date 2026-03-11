@@ -418,7 +418,7 @@ export default function LoginModal({ isOpen, onClose, onLoginSuccess }: {
               {loading ? t('common.processing') : t('auth.signIn')}
             </button>
             <div className="mt-2 text-center">
-              <Link href={`/${locale}/auth/forgot-password`} onClick={onClose} className={`text-xs ${cn.link}`}>
+              <Link href={`/${locale}/auth/forgot-password`} prefetch={false} onClick={onClose} className={`text-xs ${cn.link}`}>
                 {t('auth.forgotPassword')}
               </Link>
             </div>

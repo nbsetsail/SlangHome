@@ -19,7 +19,7 @@ export async function mget(keys: string[]): Promise<(string | null)[]> {
       return results as (string | null)[];
     }
   } catch (error) {
-    console.error('批量获取缓存失败:', error);
+    console.error('Batch get cache failed:', error);
     return keys.map(() => null);
   }
 }
@@ -60,7 +60,7 @@ export async function mset(
     }
     return true;
   } catch (error) {
-    console.error('批量设置缓存失败:', error);
+    console.error('Batch set cache failed:', error);
     return false;
   }
 }
@@ -85,7 +85,7 @@ export async function mdel(keys: string[]): Promise<boolean> {
     }
     return true;
   } catch (error) {
-    console.error('批量删除缓存失败:', error);
+    console.error('Batch delete cache failed:', error);
     return false;
   }
 }

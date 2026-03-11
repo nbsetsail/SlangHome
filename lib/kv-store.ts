@@ -167,7 +167,7 @@ export const syncKVStoreToRedis = async (redis: any): Promise<{ synced: number; 
       synced++;
     } catch (err) {
       failed++;
-      console.error(`同步 KV Store 失败 [${key}]:`, (err as Error).message);
+      console.error(`KV Store sync failed [${key}]:`, (err as Error).message);
     }
   }
 
@@ -182,7 +182,7 @@ export const syncKVStoreToRedis = async (redis: any): Promise<{ synced: number; 
     }
   }
 
-  console.log(`📤 KV Store 同步到 Redis 完成: ${synced} 成功, ${failed} 失败`);
+  console.log(`📤 KV Store synced to Redis: ${synced} succeeded, ${failed} failed`);
   return { synced, failed };
 };
 

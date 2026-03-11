@@ -265,14 +265,29 @@ export const { auth, handlers, signIn, signOut } = NextAuth({
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      console.log('[auth] signIn callback triggered', {
+        provider: account?.provider,
+        userEmail: user.email,
+        userName: user.name
+      })
+      
       if (account?.provider && account.provider !== 'credentials') {
         const isOAuth = await isOAuthProvider(account.provider)
+        console.log('[auth] isOAuthProvider result:', isOAuth)
+        
         if (isOAuth) {
           const providerEnabled = await isOAuthProviderEnabled(account.provider)
+          console.log('[auth] isOAuthProviderEnabled result:', providerEnabled)
+          
           if (!providerEnabled) {
             console.log(`OAuth provider ${account.provider} is disabled`)
             return '/login?error=OAuthDisabled'
           }
+        }
+        
+        if (!user.email) {
+          console.error('[auth] OAuth user has no email')
+          return '/login?error=NoEmail'
         }
         
         try {
