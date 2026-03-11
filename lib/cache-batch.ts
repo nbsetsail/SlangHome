@@ -1,4 +1,4 @@
-import { getRedis } from './cache-adapter';
+import { getRedis, isUpstash } from './cache-adapter';
 
 export async function mget(keys: string[]): Promise<(string | null)[]> {
   if (!keys || keys.length === 0) {
@@ -11,11 +11,11 @@ export async function mget(keys: string[]): Promise<(string | null)[]> {
   }
 
   try {
-    if (process.env.USE_UPSTASH === 'true') {
-      const results = await redis.mget(...keys);
+    if (isUpstash()) {
+      const results = await (redis as any).mget(...keys);
       return results as (string | null)[];
     } else {
-      const results = await redis.mGet(keys);
+      const results = await (redis as any).mGet(keys);
       return results as (string | null)[];
     }
   } catch (error) {
@@ -37,8 +37,8 @@ export async function mset(
   }
 
   try {
-    if (process.env.USE_UPSTASH === 'true') {
-      const pipeline = redis.pipeline();
+    if (isUpstash()) {
+      const pipeline = (redis as any).pipeline();
       for (const { key, value, ttl } of keyValuePairs) {
         if (ttl) {
           pipeline.set(key, value, { ex: ttl });
@@ -48,7 +48,7 @@ export async function mset(
       }
       await pipeline.exec();
     } else {
-      const multi = redis.multi();
+      const multi = (redis as any).multi();
       for (const { key, value, ttl } of keyValuePairs) {
         if (ttl) {
           multi.setEx(key, ttl, value);
@@ -76,10 +76,12 @@ export async function mdel(keys: string[]): Promise<boolean> {
   }
 
   try {
-    if (process.env.USE_UPSTASH === 'true') {
-      await redis.del(...keys);
+    if (isUpstash()) {
+      for (const key of keys) {
+        await (redis as any).del(key);
+      }
     } else {
-      await redis.del(keys);
+      await (redis as any).del(keys);
     }
     return true;
   } catch (error) {

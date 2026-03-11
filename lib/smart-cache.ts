@@ -1,4 +1,4 @@
-import { getRedis, IS_VERCEL } from './cache-adapter';
+import { getRedis, isUpstash, IS_VERCEL } from './cache-adapter';
 
 interface CacheEntry<T> {
   value: T;
@@ -44,14 +44,12 @@ class SmartCache {
 
     try {
       const redis = await getRedis();
-      let fromRedis: any;
-      
-      if (IS_VERCEL) {
-        fromRedis = await redis.get(key);
-      } else {
-        const data = await redis.get(key);
-        fromRedis = data;
+      if (!redis) {
+        this.stats.misses++;
+        return null;
       }
+      
+      const fromRedis = await (redis as any).get(key);
       
       if (fromRedis !== null) {
         this.stats.redisHits++;
@@ -94,12 +92,14 @@ class SmartCache {
 
     try {
       const redis = await getRedis();
+      if (!redis) return false;
+      
       const valueToStore = typeof value === 'string' ? value : JSON.stringify(value);
       
-      if (IS_VERCEL) {
-        await redis.set(key, valueToStore, { ex: effectiveTTL });
+      if (isUpstash()) {
+        await (redis as any).set(key, valueToStore, { ex: effectiveTTL });
       } else {
-        await redis.setEx(key, effectiveTTL, valueToStore);
+        await (redis as any).setEx(key, effectiveTTL, valueToStore);
       }
       
       return true;
@@ -134,7 +134,8 @@ class SmartCache {
 
     try {
       const redis = await getRedis();
-      await redis.del(key);
+      if (!redis) return false;
+      await (redis as any).del(key);
       return true;
     } catch (error) {
       console.error('SmartCache delete error:', error);
@@ -154,25 +155,28 @@ class SmartCache {
 
     try {
       const redis = await getRedis();
+      if (!redis) return deleted;
       
-      if (IS_VERCEL) {
+      if (isUpstash()) {
         const keys: string[] = [];
         let cursor = 0;
         
         do {
-          const result = await redis.scan(cursor, { match: pattern, count: 100 });
-          cursor = result[0];
-          keys.push(...result[1]);
+          const result = await (redis as any).scan(cursor, { match: pattern, count: 100 });
+          cursor = result.cursor;
+          keys.push(...result.keys);
         } while (cursor !== 0);
         
         if (keys.length > 0) {
-          await redis.del(...keys);
+          for (const key of keys) {
+            await (redis as any).del(key);
+          }
           deleted += keys.length;
         }
       } else {
-        const keys = await redis.keys(pattern);
+        const keys = await (redis as any).keys(pattern);
         if (keys.length > 0) {
-          await redis.del(keys);
+          await (redis as any).del(keys);
           deleted += keys.length;
         }
       }

@@ -84,11 +84,15 @@ async function getLocalRedis() {
   }
 }
 
-export async function getRedis(): Promise<any> {
+export async function getRedis() {
   if (IS_VERCEL) {
     return getUpstashRedis();
   }
   return await getLocalRedis();
+}
+
+export function isUpstash(): boolean {
+  return IS_VERCEL;
 }
 
 export async function initRedis(): Promise<void> {
@@ -185,7 +189,7 @@ export async function closeRedis(): Promise<void> {
   }
 }
 
-export async function getRedisClient(): Promise<any> {
+export async function getRedisClient() {
   return getRedis();
 }
 
