@@ -6,6 +6,7 @@ import { reloadConfigCache as reloadCacheConfig } from '@/lib/cache';
 import { reloadConfigCache as reloadNotificationConfig } from '@/lib/notification-queue';
 import { reloadConfigCache as reloadHeatConfig } from '@/lib/calculateHeat';
 import { getCacheStatus } from '@/lib/cache';
+import { logAction } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -91,6 +92,13 @@ export async function POST(request) {
       reloadNotificationConfig(),
       reloadHeatConfig()
     ])
+
+    await logAction({
+      userId: authCheck.user.id,
+      action: 'config_change',
+      targetType: 'system',
+      details: `Updated ${configs.length} config items: ${configs.map(c => c.key).join(', ')}`
+    }).catch(() => {})
 
     return NextResponse.json({
       success: true,

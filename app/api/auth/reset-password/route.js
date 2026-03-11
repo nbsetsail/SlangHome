@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { getWriteDb, releaseDb, getQuery, runQuery, smartUpdate } from '@/lib/db-adapter'
 import { hashPassword } from '@/lib/auth'
+import { withRateLimit } from '@/lib/rate-limit'
 
 export async function GET(request) {
+  const rateCheck = await withRateLimit(request, 'passwordReset');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   const { searchParams } = new URL(request.url)
   const token = searchParams.get('token')
 
@@ -44,6 +50,11 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  const rateCheck = await withRateLimit(request, 'passwordReset');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   let db = null;
   try {
     const { token, newPassword, confirmPassword } = await request.json()

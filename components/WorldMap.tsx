@@ -174,6 +174,7 @@ export default function WorldMap() {
             <Link
               key={marker.locale}
               href={`/${marker.locale}/discover`}
+              prefetch={false}
             >
               <g className="cursor-pointer">
                 <circle
@@ -223,6 +224,7 @@ export default function WorldMap() {
             <Link
               key={loc}
               href={`/${loc}/discover`}
+              prefetch={false}
               className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs ${cn.colors.bg.card} border ${cn.colors.border.default} hover:shadow-md transition-all duration-200`}
             >
               <span

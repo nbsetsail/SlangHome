@@ -5,6 +5,7 @@ import { useTranslation, useLocale } from '@/hooks';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Header from '@/components/Header';
+import { cryptoUtils } from '@/lib/utils';
 
 export default function PrivacySettingsPage() {
   const locale = useLocale();
@@ -16,6 +17,11 @@ export default function PrivacySettingsPage() {
   const [showToast, setShowToast] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
   const [toastType, setToastType] = useState<'success' | 'error' | 'info'>('info');
+  
+  const [password, setPassword] = useState('');
+  const [confirmation, setConfirmation] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [confirmationError, setConfirmationError] = useState('');
 
   useEffect(() => {
     if (showToast) {
@@ -69,11 +75,44 @@ export default function PrivacySettingsPage() {
     }
   };
 
+  const validateDeleteForm = (): boolean => {
+    let isValid = true;
+    
+    if (!password) {
+      setPasswordError(t('gdpr.delete.passwordRequired'));
+      isValid = false;
+    } else {
+      setPasswordError('');
+    }
+    
+    if (confirmation !== 'DELETE MY ACCOUNT') {
+      setConfirmationError(t('gdpr.delete.confirmationMismatch'));
+      isValid = false;
+    } else {
+      setConfirmationError('');
+    }
+    
+    return isValid;
+  };
+
   const handleDeleteAccount = async () => {
+    if (!validateDeleteForm()) {
+      return;
+    }
+    
     setIsDeleting(true);
     try {
+      const hashedPassword = await cryptoUtils.sha256(password);
+      
       const response = await fetch('/api/user/delete-account', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          password: hashedPassword,
+          confirmation: confirmation,
+        }),
       });
 
       if (response.status === 401) {
@@ -84,9 +123,10 @@ export default function PrivacySettingsPage() {
         return;
       }
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Delete failed');
+        throw new Error(data.error || 'Delete failed');
       }
 
       showToastMessage(t('gdpr.deleteSuccess'), 'success');
@@ -95,11 +135,19 @@ export default function PrivacySettingsPage() {
       }, 1500);
     } catch (error) {
       console.error('Delete error:', error);
-      showToastMessage(t('gdpr.deleteFailed'), 'error');
+      const errorMessage = error instanceof Error ? error.message : t('gdpr.deleteFailed');
+      showToastMessage(errorMessage, 'error');
     } finally {
       setIsDeleting(false);
-      setShowDeleteConfirm(false);
     }
+  };
+
+  const handleCancelDelete = () => {
+    setShowDeleteConfirm(false);
+    setPassword('');
+    setConfirmation('');
+    setPasswordError('');
+    setConfirmationError('');
   };
 
   const getToastBgColor = () => {
@@ -184,7 +232,57 @@ export default function PrivacySettingsPage() {
                 <p className="text-sm text-gray-700 dark:text-gray-300">
                   {t('gdpr.delete.confirmMessage')}
                 </p>
-                <div className="flex space-x-4">
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('gdpr.delete.passwordLabel')}
+                  </label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      setPasswordError('');
+                    }}
+                    className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:text-white ${
+                      passwordError 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                    } focus:outline-none focus:ring-2`}
+                    placeholder={t('gdpr.delete.passwordPlaceholder')}
+                  />
+                  {passwordError && (
+                    <p className="mt-1 text-sm text-red-500">{passwordError}</p>
+                  )}
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    {t('gdpr.delete.confirmationLabel')}
+                  </label>
+                  <input
+                    type="text"
+                    value={confirmation}
+                    onChange={(e) => {
+                      setConfirmation(e.target.value);
+                      setConfirmationError('');
+                    }}
+                    className={`w-full px-3 py-2 border rounded-md dark:bg-gray-700 dark:text-white font-mono ${
+                      confirmationError 
+                        ? 'border-red-500 focus:ring-red-500' 
+                        : 'border-gray-300 dark:border-gray-600 focus:ring-blue-500'
+                    } focus:outline-none focus:ring-2`}
+                    placeholder="DELETE MY ACCOUNT"
+                  />
+                  {confirmationError && (
+                    <p className="mt-1 text-sm text-red-500">{confirmationError}</p>
+                  )}
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    {t('gdpr.delete.confirmationHint')}
+                  </p>
+                </div>
+                
+                <div className="flex space-x-4 pt-2">
                   <button
                     onClick={handleDeleteAccount}
                     disabled={isDeleting}
@@ -193,7 +291,7 @@ export default function PrivacySettingsPage() {
                     {isDeleting ? t('gdpr.delete.deleting') : t('gdpr.delete.confirmButton')}
                   </button>
                   <button
-                    onClick={() => setShowDeleteConfirm(false)}
+                    onClick={handleCancelDelete}
                     disabled={isDeleting}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 disabled:bg-gray-400 transition-colors"
                   >

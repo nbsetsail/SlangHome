@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getQuery, allQuery, runQuery, executeQuery, beginTransaction, commitTransaction, rollbackTransaction, smartInsert, smartUpdate } from '@/lib/db-adapter'
 import { checkMgrAuth, unauthorizedResponse, ALL_LOCALES } from '../auth';
 import { getUTCTimestamp } from '@/lib/date-utils';
+import { logAction } from '@/lib/logger';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -136,6 +137,14 @@ export async function POST(request) {
         await smartUpdate('users', { status: 'banned' }, 'id = $1', [userId])
         await commitTransaction()
         
+        await logAction({
+          userId: authResult.user.id,
+          action: 'user_ban',
+          targetType: 'user',
+          targetId: userId,
+          details: `Banned user. Reason: ${reason || 'N/A'}, Duration: ${duration || 'permanent'}`
+        }).catch(() => {})
+        
         return NextResponse.json({ success: true, message: 'User banned successfully' })
       } catch (error) {
         await rollbackTransaction()
@@ -188,6 +197,15 @@ export async function POST(request) {
         await smartUpdate('user_bans', { expires_at: now }, 'user_id = $1 AND (expires_at IS NULL OR expires_at > $2)', [userId, now])
         await smartUpdate('users', { status: 'active' }, 'id = $1', [userId])
         await commitTransaction()
+        
+        await logAction({
+          userId: authResult.user.id,
+          action: 'user_unban',
+          targetType: 'user',
+          targetId: userId,
+          details: 'Unbanned user'
+        }).catch(() => {})
+        
         return NextResponse.json({ success: true, message: 'User unbanned successfully' })
       } catch (error) {
         await rollbackTransaction()
@@ -228,6 +246,14 @@ export async function POST(request) {
       } else {
         await executeQuery('UPDATE users SET role = $1, managed_locales = NULL WHERE id = $2', [role, userId])
       }
+      
+      await logAction({
+        userId: authResult.user.id,
+        action: 'role_change',
+        targetType: 'user',
+        targetId: userId,
+        details: `Changed role to ${role}${managedLocales ? `, managed locales: ${managedLocales.join(', ')}` : ''}`
+      }).catch(() => {})
       
       return NextResponse.json({ success: true, message: 'User role updated successfully' })
     }
@@ -365,6 +391,14 @@ export async function DELETE(request) {
         await executeQuery('DELETE FROM user_freezes WHERE user_id = $1', [id])
         await executeQuery('DELETE FROM users WHERE id = $1', [id])
         await commitTransaction()
+        
+        await logAction({
+          userId: authResult.user.id,
+          action: 'delete',
+          targetType: 'user',
+          targetId: id,
+          details: `Hard deleted user: ${targetUser.username}`
+        }).catch(() => {})
         
         return NextResponse.json({ success: true, message: 'User permanently deleted' })
       } catch (error) {

@@ -1,22 +1,37 @@
 import { Pool } from 'pg';
 import { getUTCTimestamp } from './date-utils';
 
-const USE_NEON = !!process.env.DATABASE_URL || !!process.env.DATABASE_URL_POOLED || !!process.env.POSTGRES_URL;
+function getNeonConnectionString(): string {
+  const pooledUrl = process.env.DATABASE_URL_POOLED || process.env.POSTGRES_URL_POOLED;
+  if (pooledUrl) {
+    return pooledUrl;
+  }
+  
+  const directUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  if (directUrl) {
+    console.warn('⚠️ Using direct connection. Consider using DATABASE_URL_POOLED for Vercel/Serverless.');
+    return directUrl;
+  }
+  
+  return '';
+}
+
+const USE_NEON = !!getNeonConnectionString();
 
 let pool: Pool | null = null;
 
 function getPool(): Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL || process.env.DATABASE_URL_POOLED || process.env.POSTGRES_URL;
+    const connectionString = getNeonConnectionString();
     if (connectionString) {
       pool = new Pool({
         connectionString,
         ssl: { rejectUnauthorized: false },
-        max: 10,
-        idleTimeoutMillis: 30000,
+        max: 1,
+        idleTimeoutMillis: 10000,
         connectionTimeoutMillis: 10000,
       });
-      console.log('✅ Neon PostgreSQL connection pool created');
+      console.log('✅ Neon PostgreSQL connection pool created (Serverless optimized)');
     } else {
       pool = new Pool({
         host: process.env.POSTGRES_HOST || 'localhost',

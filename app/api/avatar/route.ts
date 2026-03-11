@@ -4,8 +4,14 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { smartUpdate, getQuery } from '@/lib/db-adapter';
 import { uploadAvatar as uploadToR2, deleteFromR2, getAvatarUrl, IS_VERCEL } from '@/lib/r2-storage';
+import { withRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
+  const rateCheck = await withRateLimit(request, 'upload');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   try {
     const formData = await request.formData();
     const file = formData.get('avatar');

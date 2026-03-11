@@ -1,11 +1,18 @@
 import { NextResponse } from 'next/server';
-import { auth } from '@/lib/auth';
-import { getWriteDb } from '@/lib/db-adapter';
+import { auth, comparePassword } from '@/lib/auth';
+import { getWriteDb, getQuery } from '@/lib/db-adapter';
 import { cacheDel, cacheKeys } from '@/lib/cache';
+import { logAction } from '@/lib/logger';
+import { withRateLimit } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
-export async function DELETE() {
+export async function DELETE(request: Request) {
+  const rateCheck = await withRateLimit(request, 'deleteAccount');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   try {
     const session = await auth();
     
@@ -16,27 +23,58 @@ export async function DELETE() {
       );
     }
 
+    const body = await request.json().catch(() => ({}));
+    const { password, confirmation } = body;
+
+    if (!password) {
+      return NextResponse.json(
+        { error: 'Password is required to delete account' },
+        { status: 400 }
+      );
+    }
+
+    if (confirmation !== 'DELETE MY ACCOUNT') {
+      return NextResponse.json(
+        { error: 'Please type "DELETE MY ACCOUNT" to confirm' },
+        { status: 400 }
+      );
+    }
+
+    const user = await getQuery(
+      'SELECT id, password FROM users WHERE email = $1',
+      [session.user.email]
+    );
+
+    if (!user) {
+      return NextResponse.json(
+        { error: 'User not found' },
+        { status: 404 }
+      );
+    }
+
+    const isValidPassword = await comparePassword(password, user.password);
+    if (!isValidPassword) {
+      await logAction({
+        userId: session.user.id,
+        action: 'account_delete',
+        targetType: 'user',
+        targetId: session.user.id,
+        details: 'Failed account deletion attempt - invalid password'
+      }).catch(() => {});
+      
+      return NextResponse.json(
+        { error: 'Invalid password' },
+        { status: 400 }
+      );
+    }
+
     const connection = await getWriteDb();
     const userEmail = session.user.email;
+    const userId = user.id;
 
     await connection.query('START TRANSACTION');
 
     try {
-      const users = await connection.query(
-        'SELECT id FROM users WHERE email = $1',
-        [userEmail]
-      );
-
-      if (!Array.isArray(users.rows) || users.rows.length === 0) {
-        await connection.query('ROLLBACK');
-        return NextResponse.json(
-          { error: 'User not found' },
-          { status: 404 }
-        );
-      }
-
-      const userId = users.rows[0].id;
-
       await connection.query(
         'DELETE FROM notifications WHERE user_id = $1',
         [userId]
@@ -123,6 +161,14 @@ export async function DELETE() {
       );
 
       await connection.query('COMMIT');
+
+      await logAction({
+        userId: session.user.id,
+        action: 'account_delete',
+        targetType: 'user',
+        targetId: session.user.id,
+        details: 'Account permanently deleted'
+      }).catch(() => {});
 
       try {
         await cacheDel(cacheKeys.user.base(userId));

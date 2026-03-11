@@ -1,15 +1,44 @@
 /**
  * System Configuration Management
  * Unified management of all system configuration reads and updates
- * Caching is managed by cache.js (Redis + memory fallback)
+ * Uses pure memory cache (no Redis) for configuration
+ * Priority: Memory Cache → Database → Default Values
  */
 
-import { cacheGet, cacheSet, cacheDel } from './cache';
 import { cacheKeys } from './cache/keys';
 
 type ConfigValue = Record<string, unknown>
 
 const CONFIG_CACHE_TTL = 86400;
+
+const configMemoryCache = new Map<string, { value: ConfigValue; expiresAt: number }>();
+
+function getMemoryCache(key: string): ConfigValue | null {
+  const entry = configMemoryCache.get(key);
+  if (!entry) return null;
+  
+  if (Date.now() > entry.expiresAt) {
+    configMemoryCache.delete(key);
+    return null;
+  }
+  
+  return entry.value;
+}
+
+function setMemoryCache(key: string, value: ConfigValue, ttl: number = CONFIG_CACHE_TTL): void {
+  configMemoryCache.set(key, {
+    value,
+    expiresAt: Date.now() + ttl * 1000,
+  });
+}
+
+function deleteMemoryCache(key: string): void {
+  configMemoryCache.delete(key);
+}
+
+function clearAllMemoryCache(): void {
+  configMemoryCache.clear();
+}
 
 export const configKeys = {
   slangHeat: 'slang_heat_config',
@@ -173,7 +202,7 @@ export async function loadAllConfigsFromDB(): Promise<void> {
     for (const row of rows as any[]) {
       try {
         const value = JSON.parse(row.value)
-        await cacheSet(getCacheKey(row.item), value, CONFIG_CACHE_TTL)
+        setMemoryCache(getCacheKey(row.item), value)
         loadedCount++
       } catch (e) {
         console.error(`Failed to parse config ${row.item}:`, e)
@@ -181,9 +210,9 @@ export async function loadAllConfigsFromDB(): Promise<void> {
     }
     
     for (const key of Object.keys(defaultConfigs)) {
-      const cached = await cacheGet(getCacheKey(key))
+      const cached = getMemoryCache(getCacheKey(key))
       if (!cached) {
-        await cacheSet(getCacheKey(key), defaultConfigs[key], CONFIG_CACHE_TTL)
+        setMemoryCache(getCacheKey(key), defaultConfigs[key])
       }
     }
     
@@ -195,19 +224,32 @@ export async function loadAllConfigsFromDB(): Promise<void> {
 
 export async function getConfig<T = ConfigValue>(key: ConfigKey): Promise<T | null> {
   const cacheKey = getCacheKey(key)
-  const cached = await cacheGet(cacheKey)
+  
+  const cached = getMemoryCache(cacheKey)
   if (cached) {
     return cached as T
   }
   
-  await loadAllConfigsFromDB()
-  
-  const reloaded = await cacheGet(cacheKey)
-  if (reloaded) {
-    return reloaded as T
+  try {
+    const { getQuery } = await import('./db-adapter')
+    const row = await getQuery('SELECT value FROM config WHERE item = $1', [key])
+    
+    if (row && row.value) {
+      const value = JSON.parse(row.value)
+      setMemoryCache(cacheKey, value)
+      return value as T
+    }
+  } catch (error) {
+    console.error(`Failed to load config ${key} from DB:`, error)
   }
   
-  return (defaultConfigs[key] as T) || null
+  const defaultValue = defaultConfigs[key]
+  if (defaultValue) {
+    setMemoryCache(cacheKey, defaultValue)
+    return defaultValue as T
+  }
+  
+  return null
 }
 
 export async function getConfigWithDefault<T>(key: ConfigKey, defaultValue: T): Promise<T> {
@@ -225,7 +267,7 @@ export async function setConfig(key: ConfigKey, value: ConfigValue): Promise<boo
       description: ''
     }, ['item'])
     
-    await cacheSet(getCacheKey(key), value, CONFIG_CACHE_TTL)
+    setMemoryCache(getCacheKey(key), value)
     
     console.log(`✅ Configuration ${key} updated`)
     return true
@@ -243,7 +285,7 @@ export async function deleteConfig(key: ConfigKey): Promise<boolean> {
       await connection.query('DELETE FROM config WHERE item = $1', [key])
     })
     
-    await cacheDel(getCacheKey(key))
+    deleteMemoryCache(getCacheKey(key))
     
     console.log(`✅ Configuration ${key} deleted`)
     return true
@@ -255,10 +297,9 @@ export async function deleteConfig(key: ConfigKey): Promise<boolean> {
 
 export async function clearConfigCache(key?: ConfigKey): Promise<void> {
   if (key) {
-    await cacheDel(getCacheKey(key))
+    deleteMemoryCache(getCacheKey(key))
   } else {
-    const { cacheDelPattern } = await import('./cache')
-    await cacheDelPattern('config:*')
+    clearAllMemoryCache()
   }
 }
 
@@ -266,8 +307,8 @@ export async function getAllCachedConfigs(): Promise<Record<string, ConfigValue>
   const result: Record<string, ConfigValue> = {}
   
   for (const key of Object.keys(defaultConfigs)) {
-    const cached = await cacheGet(getCacheKey(key))
-    result[key] = (cached as ConfigValue) || defaultConfigs[key]
+    const cached = getMemoryCache(getCacheKey(key))
+    result[key] = cached || defaultConfigs[key]
   }
   
   return result

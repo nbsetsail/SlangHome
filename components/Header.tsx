@@ -67,6 +67,7 @@ export default function Header({ showLoginModal, showAddSlangModal }: HeaderProp
               <Link
                 key={link.href}
                 href={link.href}
+                prefetch={false}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${cn.colors.text.primary} ${cn.colors.text.primaryHover} hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200`}
               >
                 {link.icon}
@@ -100,6 +101,7 @@ export default function Header({ showLoginModal, showAddSlangModal }: HeaderProp
                 <Link
                   key={link.href}
                   href={link.href}
+                  prefetch={false}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`flex items-center gap-3 px-3 py-3 rounded-lg ${cn.colors.text.primary} ${cn.colors.text.primaryHover} hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200`}
                 >

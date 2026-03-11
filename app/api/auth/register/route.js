@@ -4,8 +4,14 @@ import { registerSchema, validateSchema } from '@/lib/validators'
 import { generateUUIDv7 } from '@/lib/uuid.js';
 import { validateVerificationCode, cleanupExpiredVerificationCodes } from '@/lib/verification';
 import { hashPassword } from '@/lib/auth';
+import { withRateLimit } from '@/lib/rate-limit';
 
 export async function POST(request) {
+  const rateCheck = await withRateLimit(request, 'register');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   let db = null
   try {
     const data = await request.json()

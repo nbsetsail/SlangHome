@@ -18,7 +18,7 @@ export type ActionLogAction =
   | 'comment_create' | 'comment_delete'
   | 'report_submit' | 'report_resolve'
   | 'user_ban' | 'user_unban' | 'role_change'
-  | 'config_change';
+  | 'config_change' | 'account_delete';
 export type SystemLogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogConfig {

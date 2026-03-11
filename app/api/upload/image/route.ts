@@ -4,6 +4,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import { auth } from '@/lib/auth';
 import { FEATURES } from '@/lib/env';
+import { withRateLimit } from '@/lib/rate-limit';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_TYPES = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -13,6 +14,11 @@ async function compressImage(buffer: Buffer, mimeType: string, maxWidth: number 
 }
 
 export async function POST(request: Request) {
+  const rateCheck = await withRateLimit(request, 'upload');
+  if (!rateCheck.allowed) {
+    return rateCheck.response;
+  }
+
   if (!FEATURES.COMMENT_IMAGE_UPLOAD_ENABLED) {
     return NextResponse.json(
       { success: false, error: 'Feature disabled' },

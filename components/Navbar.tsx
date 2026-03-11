@@ -111,6 +111,7 @@ export default function NavBar({ showLoginModal }: NavBarProps) {
       <nav className="flex items-center gap-1 shrink-0">
         <Link
           href={`/${locale}/search`}
+          prefetch={false}
           className={`flex items-center gap-1.5 p-2 rounded-lg ${cn.colors.text.primary} ${cn.colors.text.primaryHover} hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200`}
           title={t('nav.advancedSearch')}
         >
@@ -123,6 +124,7 @@ export default function NavBar({ showLoginModal }: NavBarProps) {
         
         <Link
           href={`/${locale}/contribute`}
+          prefetch={false}
           className={`flex items-center gap-1.5 p-2 rounded-lg ${cn.colors.text.primary} ${cn.colors.text.primaryHover} hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200`}
           title={t('nav.addSlang')}
         >
@@ -136,6 +138,7 @@ export default function NavBar({ showLoginModal }: NavBarProps) {
         
         <Link
           href={`/${locale}/feedback`}
+          prefetch={false}
           className={`flex items-center gap-1.5 p-2 rounded-lg ${cn.colors.text.primary} ${cn.colors.text.primaryHover} hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200`}
           title={t('nav.feedback')}
         >

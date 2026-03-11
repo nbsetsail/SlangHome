@@ -855,7 +855,13 @@
       "button": "Delete Account",
       "confirmMessage": "Are you absolutely sure? This will permanently delete your account and all your data.",
       "confirmButton": "Yes, Delete My Account",
-      "deleting": "Deleting..."
+      "deleting": "Deleting...",
+      "passwordLabel": "Enter your password",
+      "passwordPlaceholder": "Enter current password",
+      "passwordRequired": "Please enter your password to confirm deletion",
+      "confirmationLabel": "Type DELETE MY ACCOUNT to confirm",
+      "confirmationHint": "Please type the exact text above to confirm deletion",
+      "confirmationMismatch": "Confirmation text does not match. Please type DELETE MY ACCOUNT"
     },
     "cookies": {
       "title": "Cookie Preferences",
