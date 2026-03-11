@@ -2,14 +2,23 @@ import { Pool } from 'pg';
 import { getUTCTimestamp } from './date-utils';
 
 function getNeonConnectionString(): string {
+  // 优先级：连接池 URL > 直接连接 URL
+  // 1. 手动配置的连接池 URL
   const pooledUrl = process.env.DATABASE_URL_POOLED || process.env.POSTGRES_URL_POOLED;
   if (pooledUrl) {
     return pooledUrl;
   }
   
-  const directUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL;
+  // 2. Neon 自动注入的连接池 URL (Vercel Integration)
+  const neonPooledUrl = process.env.POSTGRES_URL;
+  if (neonPooledUrl && neonPooledUrl.includes('pooler')) {
+    return neonPooledUrl;
+  }
+  
+  // 3. 直接连接 (警告：不适合 Serverless)
+  const directUrl = process.env.DATABASE_URL || process.env.POSTGRES_URL || process.env.POSTGRES_URL_NON_POOLING;
   if (directUrl) {
-    console.warn('⚠️ Using direct connection. Consider using DATABASE_URL_POOLED for Vercel/Serverless.');
+    console.warn('⚠️ Using direct connection. Consider using pooled connection for Vercel/Serverless.');
     return directUrl;
   }
   
