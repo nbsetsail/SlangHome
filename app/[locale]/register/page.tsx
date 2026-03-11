@@ -259,7 +259,7 @@ export default function RegisterPage() {
                       <div className="flex gap-2">
                         <Link
                           href={`/${locale}/login?email=${encodeURIComponent(email)}`}
-                          prefetch="intent"
+                          prefetch={false}
                           className="flex-1 py-2 px-4 bg-blue-500 text-white text-sm rounded-md text-center hover:bg-blue-600 transition-colors"
                         >
                           {t('auth.signIn')}
@@ -401,7 +401,7 @@ export default function RegisterPage() {
               )}
 
               <div className="mt-4 text-center md:hidden">
-                <Link href={`/${locale}/login`} prefetch="intent" className={`${cn.link} text-sm`}>
+                <Link href={`/${locale}/login`} prefetch={false} className={`${cn.link} text-sm`}>
                   {t('auth.hasAccountSignIn')}
                 </Link>
               </div>
@@ -448,7 +448,7 @@ export default function RegisterPage() {
           </div>
 
           <div className="hidden md:block mt-6 text-center">
-            <Link href={`/${locale}/login`} prefetch="intent" className={`${cn.link} text-sm`}>
+            <Link href={`/${locale}/login`} prefetch={false} className={`${cn.link} text-sm`}>
               {t('auth.hasAccountSignIn')}
             </Link>
           </div>

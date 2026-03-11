@@ -187,7 +187,7 @@ function LoginContent() {
             </form>
 
             <div className="mt-4 text-center space-y-2 md:hidden">
-              <Link href={`/${locale}/register`} prefetch="intent" className={`${cn.link} text-sm block`}>
+              <Link href={`/${locale}/register`} prefetch={false} className={`${cn.link} text-sm block`}>
                 {t('auth.noAccountCreate')}
               </Link>
               <Link href={`/${locale}/auth/forgot-password`} prefetch={false} className={`${cn.link} text-sm block text-gray-500`}>
@@ -237,7 +237,7 @@ function LoginContent() {
         </div>
 
         <div className="hidden md:block mt-6 text-center space-y-2">
-          <Link href={`/${locale}/register`} prefetch="intent" className={`${cn.link} text-sm`}>
+          <Link href={`/${locale}/register`} prefetch={false} className={`${cn.link} text-sm`}>
             {t('auth.noAccountCreate')}
           </Link>
           <span className="text-gray-400 mx-2">|</span>

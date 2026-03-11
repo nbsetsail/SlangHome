@@ -15,12 +15,13 @@ import { localeNames, localeColors } from '@/i18n/config'
 import { formatShortDate } from '@/lib/date-utils'
 
 interface HotSlang {
-  id: number
+  id: string
   phrase: string
   explanation: string
   locale: string
   views: number
   likes: number
+  heat?: string
 }
 
 interface Activity {
@@ -206,39 +207,43 @@ export default function HomePage() {
   ]
 
   useEffect(() => {
+    let isMounted = true
+    
     const fetchHotSlangs = async () => {
-      const { data: cached, expired, isEmpty } = getCachedData<HotSlang[]>(CACHE_KEY_HOT_SLANGS, 'all')
+      const { data: cached, expired, isEmpty } = getCachedData<HotSlang[]>(CACHE_KEY_HOT_SLANGS, locale)
       if (cached && !isEmpty) {
-        setHotSlangs(cached)
+        if (isMounted) setHotSlangs(cached)
         if (!expired) return
       }
 
       try {
-        const response = await fetch(`/api/slang?limit=4&sort=heat&allLocales=true`)
+        const response = await fetch(`/api/slang?limit=4&sort=heat&locale=${locale}`)
         if (response.ok) {
           const data = await response.json()
           const slangs = data.slang || []
-          if (slangs.length > 0) {
+          if (slangs.length > 0 && isMounted) {
             setHotSlangs(slangs)
-            setCachedData(CACHE_KEY_HOT_SLANGS, 'all', slangs)
-          } else if (cached && isEmpty) {
+            setCachedData(CACHE_KEY_HOT_SLANGS, locale, slangs)
+          } else if (cached && isEmpty && isMounted) {
             setHotSlangs(cached)
           }
-        } else if (cached) {
+        } else if (cached && isMounted) {
           setHotSlangs(cached)
         }
       } catch (err) {
         console.error('Error fetching hot slangs:', err)
-        if (cached) {
+        if (cached && isMounted) {
           console.warn('Using stale cache for hot slangs')
         }
+      } finally {
+        if (isMounted) setLoading(false)
       }
     }
 
     const fetchActivities = async () => {
       const { data: cached, expired, isEmpty } = getCachedData<Activity[]>(CACHE_KEY_ACTIVITIES, locale)
       if (cached && !isEmpty) {
-        setActivities(cached)
+        if (isMounted) setActivities(cached)
         if (!expired) return
       }
 
@@ -248,17 +253,19 @@ export default function HomePage() {
           const data = await response.json()
           if (data.success) {
             const acts = data.data.activities || []
-            setActivities(acts)
-            setCachedData(CACHE_KEY_ACTIVITIES, locale, acts)
-          } else if (cached) {
+            if (isMounted) {
+              setActivities(acts)
+              setCachedData(CACHE_KEY_ACTIVITIES, locale, acts)
+            }
+          } else if (cached && isMounted) {
             setActivities(cached)
           }
-        } else if (cached) {
+        } else if (cached && isMounted) {
           setActivities(cached)
         }
       } catch (err) {
         console.error('Error fetching activities:', err)
-        if (cached) {
+        if (cached && isMounted) {
           console.warn('Using stale cache for activities')
         }
       }
@@ -267,7 +274,7 @@ export default function HomePage() {
     const fetchFloatingWords = async () => {
       const { data: cached, expired, isEmpty } = getCachedData<{ word: string; locale: string; delay: number }[]>(CACHE_KEY_FLOATING_WORDS, 'global', CACHE_DURATION_WEEK)
       if (cached && !isEmpty) {
-        setFloatingWords(cached)
+        if (isMounted) setFloatingWords(cached)
         if (!expired) return
       }
 
@@ -277,7 +284,7 @@ export default function HomePage() {
           const data = await response.json()
           if (data.success) {
             const slangs = data.data.slangs || []
-            if (slangs.length > 0) {
+            if (slangs.length > 0 && isMounted) {
               const words = slangs.map((s: { phrase: string; locale: string }, index: number) => ({
                 word: s.phrase,
                 locale: s.locale,
@@ -285,18 +292,18 @@ export default function HomePage() {
               }))
               setFloatingWords(words)
               setCachedData(CACHE_KEY_FLOATING_WORDS, 'global', words)
-            } else if (cached && !isEmpty) {
+            } else if (cached && !isEmpty && isMounted) {
               setFloatingWords(cached)
             }
-          } else if (cached && !isEmpty) {
+          } else if (cached && !isEmpty && isMounted) {
             setFloatingWords(cached)
           }
-        } else if (cached && !isEmpty) {
+        } else if (cached && !isEmpty && isMounted) {
           setFloatingWords(cached)
         }
       } catch (err) {
         console.error('Error fetching floating words:', err)
-        if (cached && !isEmpty) {
+        if (cached && !isEmpty && isMounted) {
           console.warn('Using stale cache for floating words')
         }
       }
@@ -305,7 +312,7 @@ export default function HomePage() {
     const fetchSeries = async () => {
       const { data: cached, expired, isEmpty } = getCachedData<Series[]>(CACHE_KEY_SERIES, locale, CACHE_DURATION_MONTH)
       if (cached && !isEmpty) {
-        setSeriesList(cached)
+        if (isMounted) setSeriesList(cached)
         if (!expired) return
       }
 
@@ -315,32 +322,36 @@ export default function HomePage() {
           const data = await response.json()
           if (data.success) {
             const series = data.data.series || []
-            if (series.length > 0) {
+            if (series.length > 0 && isMounted) {
               setSeriesList(series)
               setCachedData(CACHE_KEY_SERIES, locale, series)
-            } else if (cached) {
+            } else if (cached && isMounted) {
               setSeriesList(cached)
             }
-          } else if (cached) {
+          } else if (cached && isMounted) {
             setSeriesList(cached)
           }
-        } else if (cached) {
+        } else if (cached && isMounted) {
           setSeriesList(cached)
         }
       } catch (err) {
         console.error('Error fetching series:', err)
-        if (cached) {
+        if (cached && isMounted) {
           console.warn('Using stale cache for series')
         }
-      } finally {
-        setLoading(false)
       }
     }
 
     fetchHotSlangs()
     fetchActivities()
     fetchFloatingWords()
-    fetchSeries()
+    fetchSeries().finally(() => {
+      if (isMounted) setLoading(false)
+    })
+    
+    return () => {
+      isMounted = false
+    }
   }, [locale])
 
   const formatNumber = (num: number) => {
@@ -421,7 +432,7 @@ export default function HomePage() {
                 <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
                   <Link
                     href={`/${locale}/discover`}
-                    prefetch="intent"
+                    prefetch="auto"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white text-purple-600 hover:bg-gray-100 text-lg font-medium transition-all duration-200 shadow-lg hover:shadow-xl"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -433,7 +444,7 @@ export default function HomePage() {
                   </Link>
                   <Link
                     href={`/${locale}/subscribe`}
-                    prefetch="intent"
+                    prefetch="auto"
                     className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-white/20 backdrop-blur-sm text-white hover:bg-white/30 text-lg font-medium transition-all duration-200 border border-white/30"
                   >
                     {t('home.hero.learnMore')}
@@ -516,7 +527,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/discover`}
-                prefetch="intent"
+                prefetch="auto"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('home.hero.explore')}
@@ -542,7 +553,7 @@ export default function HomePage() {
                   <Link
                     key={slang.id}
                     href={`/${locale}/slang/${slang.id}`}
-                    prefetch="intent"
+                    prefetch="auto"
                     className={`${cn.colors.bg.card} rounded-lg p-4 border ${cn.colors.border.default} hover:shadow-md transition-shadow duration-200`}
                   >
                     <div className="flex items-start justify-between mb-2">
@@ -599,7 +610,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/activities`}
-                prefetch="intent"
+                prefetch="auto"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('activities.viewAll') || 'View All'}
@@ -615,7 +626,7 @@ export default function HomePage() {
                   <Link
                     key={activity.id}
                     href={`/${locale}/activities?id=${activity.id}`}
-                    prefetch="intent"
+                    prefetch="auto"
                     className={`${cn.colors.bg.card} rounded-lg overflow-hidden border ${cn.colors.border.default} hover:shadow-lg transition-shadow duration-200`}
                   >
                     {activity.image_url ? (
@@ -671,7 +682,7 @@ export default function HomePage() {
                 <p className={cn.colors.text.secondary}>{t('activities.noOngoing')}</p>
                 <Link
                   href={`/${locale}/activities`}
-                  prefetch="intent"
+                  prefetch="auto"
                   className={`inline-flex items-center gap-1 mt-4 text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover}`}
                 >
                   {t('activities.viewAll') || 'View All Activities'}
@@ -697,7 +708,7 @@ export default function HomePage() {
               </h2>
               <Link
                 href={`/${locale}/subscribe`}
-                prefetch="intent"
+                prefetch="auto"
                 className={`text-sm ${cn.colors.text.primary} ${cn.colors.text.primaryHover} flex items-center gap-1`}
               >
                 {t('subscribe.latestIssue')}
@@ -745,7 +756,7 @@ export default function HomePage() {
                     
                     <Link
                       href={`/${locale}/subscribe?type=${seriesType.type}`}
-                      prefetch="intent"
+                      prefetch="auto"
                       className={`w-full py-2 rounded-lg text-sm font-medium ${cn.primaryButton} flex items-center justify-center gap-2`}
                     >
                       {t('subscribe.viewDetails') || 'View Details'}

@@ -47,9 +47,11 @@ let cachedLocales: LocaleInfo[] | null = null
 export function LanguageSwitcher() {
   const [activeLocales, setActiveLocales] = useState<LocaleInfo[]>(cachedLocales || STATIC_LOCALES)
   const [isOpen, setIsOpen] = useState(false)
+  const [dropDirection, setDropDirection] = useState<'left' | 'right'>('right')
   const router = useRouter()
   const pathname = usePathname()
   const dropdownRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
   const hasFetched = useRef(false)
   
   useEffect(() => {
@@ -62,8 +64,12 @@ export function LanguageSwitcher() {
       .then(res => res.json())
       .then(data => {
         if (data.locales && data.locales.length > 0) {
-          cachedLocales = data.locales
-          setActiveLocales(data.locales)
+          const mergedLocales = data.locales.map((apiLocale: any) => {
+            const staticLocale = STATIC_LOCALES.find(s => s.code === apiLocale.code)
+            return staticLocale ? { ...staticLocale, ...apiLocale } : apiLocale
+          })
+          cachedLocales = mergedLocales
+          setActiveLocales(mergedLocales)
         }
       })
       .catch(() => {})
@@ -84,6 +90,22 @@ export function LanguageSwitcher() {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen])
+
+  useEffect(() => {
+    if (isOpen && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect()
+      const viewportWidth = window.innerWidth
+      const spaceOnRight = viewportWidth - rect.right
+      const spaceOnLeft = rect.left
+      const dropdownWidth = 480
+      
+      if (spaceOnRight < dropdownWidth && spaceOnLeft > spaceOnRight) {
+        setDropDirection('left')
+      } else {
+        setDropDirection('right')
+      }
+    }
+  }, [isOpen])
   
   const currentLocale = pathname.split('/')[1] || 'en'
   
@@ -102,7 +124,7 @@ export function LanguageSwitcher() {
   const getLocalesByTier = (tierCodes: string[]) => {
     return tierCodes
       .map(code => activeLocales.find(l => l.code === code))
-      .filter((l): l is LocaleInfo => l !== undefined && l.status === 'active')
+      .filter((l): l is LocaleInfo => l !== undefined)
   }
 
   const tier1 = getLocalesByTier(TIER_1_LOCALES)
@@ -135,6 +157,7 @@ export function LanguageSwitcher() {
       onMouseLeave={() => setIsOpen(false)}
     >
       <button
+        ref={buttonRef}
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center gap-1.5 px-2 py-1.5 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
       >
@@ -151,7 +174,7 @@ export function LanguageSwitcher() {
       </button>
       
       {isOpen && (
-        <div className="absolute right-0 top-full pt-2 z-50">
+        <div className={`absolute top-full pt-2 z-50 ${dropDirection === 'left' ? 'right-0' : 'left-0'}`}>
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 p-3">
             <div className="grid grid-cols-3 gap-3 min-w-[320px] sm:min-w-[400px] md:min-w-[480px]">
               <div className="space-y-1">
