@@ -86,7 +86,7 @@
     "feedback": "反馈建议"
   },
   "header": {
-    "logoText": "Slang Master",
+    "logoText": "Slang Home",
     "tagline": "在这里发现有趣的俚语"
   },
   "sidebar": {
@@ -951,7 +951,7 @@
     "lastUpdated": "最后更新",
     "introduction": {
       "title": "引言",
-      "content": "Slang Master（'我们'、'我们的'或'us'）尊重您的隐私，致力于保护您的个人数据。本隐私政策将告知您我们如何照顾您的个人数据，以及您的隐私权利和法律如何保护您。"
+      "content": "Slang Home（'我们'、'我们的'或'us'）尊重您的隐私，致力于保护您的个人数据。本隐私政策将告知您我们如何照顾您的个人数据，以及您的隐私权利和法律如何保护您。"
     },
     "collection": {
       "title": "我们收集的信息",
@@ -1023,7 +1023,7 @@
     "lastUpdated": "最后更新",
     "agreement": {
       "title": "同意条款",
-      "content": "访问或使用 Slang Master，即表示您同意受本服务条款和所有适用法律法规的约束。如果您不同意任何这些条款，则禁止使用或访问本网站。"
+      "content": "访问或使用 Slang Home，即表示您同意受本服务条款和所有适用法律法规的约束。如果您不同意任何这些条款，则禁止使用或访问本网站。"
     },
     "account": {
       "title": "用户账户",
@@ -1059,7 +1059,7 @@
     },
     "ip": {
       "title": "知识产权",
-      "content": "服务及其原始内容、功能和功能归 Slang Master 所有，受国际版权、商标和其他知识产权法保护。"
+      "content": "服务及其原始内容、功能和功能归 Slang Home 所有，受国际版权、商标和其他知识产权法保护。"
     },
     "disclaimer": {
       "title": "保证免责声明",
@@ -1067,11 +1067,11 @@
     },
     "liability": {
       "title": "责任限制",
-      "content": "在任何情况下，Slang Master 均不对任何间接、附带、特殊、后果性或惩罚性损害承担责任，包括但不限于利润、数据、使用、商誉或其他无形损失的损失。"
+      "content": "在任何情况下，Slang Home 均不对任何间接、附带、特殊、后果性或惩罚性损害承担责任，包括但不限于利润、数据、使用、商誉或其他无形损失的损失。"
     },
     "indemnification": {
       "title": "赔偿",
-      "content": "您同意赔偿并使 Slang Master 免受因您使用服务或违反这些条款而引起的任何索赔、损害、损失、责任和费用。"
+      "content": "您同意赔偿并使 Slang Home 免受因您使用服务或违反这些条款而引起的任何索赔、损害、损失、责任和费用。"
     },
     "termination": {
       "title": "终止",
@@ -1085,7 +1085,7 @@
     },
     "governing": {
       "title": "管辖法律",
-      "content": "这些条款应受 Slang Master 运营所在司法管辖区的法律管辖并按其解释，不考虑其法律冲突规定。"
+      "content": "这些条款应受 Slang Home 运营所在司法管辖区的法律管辖并按其解释，不考虑其法律冲突规定。"
     },
     "changes": {
       "title": "条款变更",

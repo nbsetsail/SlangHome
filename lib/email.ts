@@ -45,7 +45,6 @@ export class EmailService {
     this.transporter = nodemailer.createTransport(transportOptions)
   }
 
-  // Test email connection
   async verifyConnection(): Promise<boolean> {
     try {
       await this.transporter.verify()
@@ -57,10 +56,9 @@ export class EmailService {
     }
   }
 
-  // Send email with retry mechanism
   async sendEmail(to: string, subject: string, html: string, text?: string): Promise<boolean> {
     const maxRetries = 3;
-    const retryDelay = 1000; // 1 second
+    const retryDelay = 1000;
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
@@ -71,7 +69,7 @@ export class EmailService {
           to,
           subject,
           html,
-          text: text || html.replace(/<[^>]*>/g, ''), // Fallback to plain text
+          text: text || html.replace(/<[^>]*>/g, ''),
         }
 
         const result = await this.transporter.sendMail(mailOptions)
@@ -85,7 +83,6 @@ export class EmailService {
           return false
         }
         
-        // Wait before retry
         console.log(`⏳ Waiting ${retryDelay}ms before retry...`)
         await new Promise(resolve => setTimeout(resolve, retryDelay))
       }
@@ -94,9 +91,8 @@ export class EmailService {
     return false
   }
 
-  // Send welcome email
   async sendWelcomeEmail(to: string, username: string, confirmationLink?: string): Promise<boolean> {
-    const subject = 'Welcome to Global Slang Master!'
+    const subject = 'Welcome to Slang Home!'
     
     const html = `
       <!DOCTYPE html>
@@ -115,11 +111,11 @@ export class EmailService {
       <body>
         <div class="container">
           <div class="header">
-            <h1>Welcome to Global Slang Master!</h1>
+            <h1>Welcome to Slang Home!</h1>
           </div>
           <div class="content">
             <h2>Hi ${username},</h2>
-            <p>Thank you for joining our community of English slang enthusiasts!</p>
+            <p>Thank you for joining our community of language enthusiasts!</p>
             
             <p>With your account, you can:</p>
             <ul>
@@ -137,7 +133,7 @@ export class EmailService {
             
             <p>If you have any questions, feel free to reply to this email.</p>
             
-            <p>Happy slang exploring!<br>The Global Slang Master Team</p>
+            <p>Happy exploring!<br>The Slang Home Team</p>
           </div>
           <div class="footer">
             <p>This email was sent to ${to}. If you didn't create an account, please ignore this email.</p>
@@ -147,11 +143,11 @@ export class EmailService {
       </html>
     `
 
-    const text = `Welcome to Global Slang Master!
+    const text = `Welcome to Slang Home!
 
 Hi ${username},
 
-Thank you for joining our community of English slang enthusiasts!
+Thank you for joining our community of language enthusiasts!
 
 With your account, you can:
 - Submit new slang terms and definitions
@@ -164,17 +160,16 @@ ${confirmationLink}` : ''}
 
 If you have any questions, feel free to reply to this email.
 
-Happy slang exploring!
-The Global Slang Master Team
+Happy exploring!
+The Slang Home Team
 
 This email was sent to ${to}. If you didn't create an account, please ignore this email.`
 
     return this.sendEmail(to, subject, html, text)
   }
 
-  // Send password reset email
   async sendPasswordResetEmail(to: string, username: string, resetLink: string): Promise<boolean> {
-    const subject = 'Reset Your Global Slang Master Password'
+    const subject = 'Reset Your Slang Home Password'
     
     const html = `
       <!DOCTYPE html>
@@ -198,7 +193,7 @@ This email was sent to ${to}. If you didn't create an account, please ignore thi
           </div>
           <div class="content">
             <h2>Hi ${username},</h2>
-            <p>We received a request to reset your password for the Global Slang Master account.</p>
+            <p>We received a request to reset your password for your Slang Home account.</p>
             
             <div class="warning">
               <strong>Important:</strong> This link will expire in 1 hour for security reasons.
@@ -210,7 +205,7 @@ This email was sent to ${to}. If you didn't create an account, please ignore thi
             
             <p>If you didn't request a password reset, you can safely ignore this email. Your account remains secure.</p>
             
-            <p>Best regards,<br>The Global Slang Master Team</p>
+            <p>Best regards,<br>The Slang Home Team</p>
           </div>
           <div class="footer">
             <p>This email was sent to ${to}. If you didn't request a password reset, please ignore this email.</p>
@@ -220,11 +215,11 @@ This email was sent to ${to}. If you didn't create an account, please ignore thi
       </html>
     `
 
-    const text = `Password Reset Request - Global Slang Master
+    const text = `Password Reset Request - Slang Home
 
 Hi ${username},
 
-We received a request to reset your password for the Global Slang Master account.
+We received a request to reset your password for your Slang Home account.
 
 Important: This link will expire in 1 hour for security reasons.
 
@@ -234,16 +229,15 @@ ${resetLink}
 If you didn't request a password reset, you can safely ignore this email. Your account remains secure.
 
 Best regards,
-The Global Slang Master Team
+The Slang Home Team
 
 This email was sent to ${to}. If you didn't request a password reset, please ignore this email.`
 
     return this.sendEmail(to, subject, html, text)
   }
 
-  // Send notification email
   async sendNotificationEmail(to: string, username: string, title: string, message: string, actionLink?: string): Promise<boolean> {
-    const subject = `${title} - Global Slang Master`
+    const subject = `${title} - Slang Home`
     
     const html = `
       <!DOCTYPE html>
@@ -276,7 +270,7 @@ This email was sent to ${to}. If you didn't request a password reset, please ign
               </div>
             ` : ''}
             
-            <p>Best regards,<br>The Global Slang Master Team</p>
+            <p>Best regards,<br>The Slang Home Team</p>
           </div>
           <div class="footer">
             <p>This email was sent to ${to}. You can manage your notification preferences in your account settings.</p>
@@ -295,16 +289,15 @@ ${message}
 ${actionLink ? `Take action: ${actionLink}` : ''}
 
 Best regards,
-The Global Slang Master Team
+The Slang Home Team
 
 This email was sent to ${to}. You can manage your notification preferences in your account settings.`
 
     return this.sendEmail(to, subject, html, text)
   }
 
-  // Send verification code email
   async sendVerificationCodeEmail(to: string, verificationCode: string): Promise<boolean> {
-    const subject = 'Verify Your Email - Global Slang Master'
+    const subject = 'Verify Your Email - Slang Home'
     
     const html = `
       <!DOCTYPE html>
@@ -323,18 +316,18 @@ This email was sent to ${to}. You can manage your notification preferences in yo
       <body>
         <div class="container">
           <div class="header">
-            <h1>Global Slang Master</h1>
+            <h1>Slang Home</h1>
             <p>Email Verification</p>
           </div>
           <div class="content">
             <h2>Hello,</h2>
-            <p>Thank you for registering with Global Slang Master. Please use the following verification code to complete your registration:</p>
+            <p>Thank you for registering with Slang Home. Please use the following verification code to complete your registration:</p>
             <div class="code">${verificationCode}</div>
             <p>This code will expire in 10 minutes.</p>
             <p>If you didn't request this verification, please ignore this email.</p>
           </div>
           <div class="footer">
-            <p>&copy; 2026 Global Slang Master. All rights reserved.</p>
+            <p>&copy; 2026 Slang Home. All rights reserved.</p>
           </div>
         </div>
       </body>
@@ -342,11 +335,11 @@ This email was sent to ${to}. You can manage your notification preferences in yo
     `
 
     const text = `
-      Verify Your Email - Global Slang Master
+      Verify Your Email - Slang Home
       
       Hello,
       
-      Thank you for registering with Global Slang Master. Please use the following verification code to complete your registration:
+      Thank you for registering with Slang Home. Please use the following verification code to complete your registration:
       
       Verification Code: ${verificationCode}
       
@@ -354,14 +347,13 @@ This email was sent to ${to}. You can manage your notification preferences in yo
       
       If you didn't request this verification, please ignore this email.
       
-      © 2026 Global Slang Master. All rights reserved.
+      © 2026 Slang Home. All rights reserved.
     `
 
     return this.sendEmail(to, subject, html, text)
   }
 }
 
-// Default email service instance
 export const emailService = new EmailService({
   host: process.env.EMAIL_HOST || '127.0.0.1',
   port: parseInt(process.env.EMAIL_PORT || '1025'),
@@ -372,7 +364,6 @@ export const emailService = new EmailService({
   password: process.env.EMAIL_PASSWORD,
 })
 
-// Utility function to check if email is enabled
 export function isEmailEnabled(): boolean {
   return process.env.EMAIL_ENABLED !== 'false'
 }

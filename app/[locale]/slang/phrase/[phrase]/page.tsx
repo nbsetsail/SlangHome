@@ -699,7 +699,7 @@ export default function SlangDetailPage() {
       
       <footer className={`${cn.colors.bg.card} shadow mt-8`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <p className={`text-center ${cn.colors.text.muted}`}>© 2026 Slang Master</p>
+          <p className={`text-center ${cn.colors.text.muted}`}>© 2026 Slang Home</p>
         </div>
       </footer>
       
