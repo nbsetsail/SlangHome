@@ -1,6 +1,7 @@
 import createMiddleware from 'next-intl/middleware';
 import { NextResponse } from 'next/server';
 import { defaultLocale, locales } from './i18n/config';
+import { checkRateLimit, createRateLimitResponse } from './lib/rate-limit';
 
 const intlMiddleware = createMiddleware({
   locales,
@@ -8,7 +9,30 @@ const intlMiddleware = createMiddleware({
   localePrefix: 'always'
 });
 
-export function middleware(request) {
+const MAX_LIST_LIMIT = 10;
+const LIST_LIMIT_PARAMS = ['limit', 'pageSize', 'size'];
+
+function getClientIP(request) {
+  const forwarded = request.headers.get('x-forwarded-for');
+  if (forwarded) {
+    return forwarded.split(',')[0].trim();
+  }
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+  const cfIP = request.headers.get('cf-connecting-ip');
+  if (cfIP) {
+    return cfIP;
+  }
+  return 'unknown';
+}
+
+function isReadMethod(method) {
+  return method === 'GET' || method === 'HEAD';
+}
+
+export async function middleware(request) {
   const pathname = request.nextUrl.pathname;
   const method = request.method;
   
@@ -17,7 +41,34 @@ export function middleware(request) {
       return new NextResponse(null, { status: 200 });
     }
     
-    const response = NextResponse.next();
+    const clientIP = getClientIP(request);
+    const rateLimitType = pathname.startsWith('/mgr/api/') 
+      ? (isReadMethod(method) ? 'admin-read' : 'admin-write')
+      : (isReadMethod(method) ? 'api-read' : 'api-write');
+    
+    const rateResult = await checkRateLimit(rateLimitType, clientIP);
+    if (!rateResult.success) {
+      return createRateLimitResponse(rateResult);
+    }
+    
+    let url = request.nextUrl.clone();
+    let limitModified = false;
+    
+    LIST_LIMIT_PARAMS.forEach(param => {
+      const value = url.searchParams.get(param);
+      if (value !== null) {
+        const parsed = parseInt(value, 10);
+        if (!isNaN(parsed) && parsed > MAX_LIST_LIMIT) {
+          url.searchParams.set(param, MAX_LIST_LIMIT.toString());
+          limitModified = true;
+        }
+      }
+    });
+    
+    const response = limitModified 
+      ? NextResponse.rewrite(url)
+      : NextResponse.next();
+    
     const origin = request.headers.get('origin');
     const allowedOrigins = ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:8080'];
     
@@ -27,6 +78,11 @@ export function middleware(request) {
     response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     response.headers.set('Access-Control-Allow-Credentials', 'true');
+    
+    response.headers.set('X-RateLimit-Limit', rateResult.limit.toString());
+    response.headers.set('X-RateLimit-Remaining', rateResult.remaining.toString());
+    response.headers.set('X-RateLimit-Reset', rateResult.reset.toString());
+    
     return response;
   }
   
