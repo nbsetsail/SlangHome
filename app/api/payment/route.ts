@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { executeQuery } from '@/lib/db';
+import { smartInsert } from '@/lib/db';
 import { emailService } from '@/lib/email';
+import { getUTCTimestamp } from '@/lib/date-utils';
 
 function generateActivationCode(): string {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -117,11 +118,20 @@ export async function POST(request: NextRequest) {
     }
     
     const activationCode = generateActivationCode();
+    const now = getUTCTimestamp();
+    const expiredAt = new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
     
-    await executeQuery(
-      `INSERT INTO activation_codes (code, email, amount, currency, count, device_ids) VALUES ($1, $2, $3, $4, $5, '[]'::jsonb)`,
-      [activationCode, email, parseFloat(amount) || 0, currency || 'USD', 5]
-    );
+    await smartInsert('activation_codes', {
+      code: activationCode,
+      email: email,
+      amount: parseFloat(amount) || 0,
+      currency: currency || 'USD',
+      count: 5,
+      device_ids: [],
+      transaction_id: transaction_id || null,
+      created_at: now,
+      expired_at: expiredAt
+    });
     
     console.log(`[Payment] Generated code ${activationCode} for ${email}, amount: ${amount} ${currency}`);
     
@@ -151,6 +161,6 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({ 
     status: 'ok', 
     message: 'Payment endpoint is active',
-    timestamp: new Date().toISOString()
+    timestamp: getUTCTimestamp()
   });
 }

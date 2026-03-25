@@ -25,6 +25,7 @@ export default function SupportPage() {
   const { cn } = useTheme()
   const [selectedTier, setSelectedTier] = useState('premium')
   const [customAmount, setCustomAmount] = useState('')
+  const [userEmail, setUserEmail] = useState('')
   const [activationCode, setActivationCode] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -71,13 +72,14 @@ export default function SupportPage() {
             try {
               const details = await actions.order.capture()
               const payerEmail = details.payer?.email_address || ''
+              const finalEmail = userEmail.trim() || payerEmail
               
               const response = await fetch('/api/payment', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   data: {
-                    email: payerEmail,
+                    email: finalEmail,
                     amount: currentAmount.toString(),
                     currency: 'USD',
                     transaction_id: details.id
@@ -194,6 +196,22 @@ export default function SupportPage() {
                       </div>
                     </button>
                   ))}
+                </div>
+                
+                <div className="mb-6">
+                  <label className={`block text-sm font-medium ${cn.colors.text.secondary} mb-2`}>
+                    {isZh ? '邮箱（可选）' : 'Email (optional)'}
+                  </label>
+                  <input
+                    type="email"
+                    value={userEmail}
+                    onChange={(e) => setUserEmail(e.target.value)}
+                    placeholder={isZh ? '用于接收激活码' : 'To receive activation code'}
+                    className={`w-full px-4 py-2 rounded-lg border ${cn.colors.border.default} ${cn.colors.bg.card} focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
+                  />
+                  <p className={`mt-1 text-xs ${cn.colors.text.secondary}`}>
+                    {isZh ? '留空则使用 PayPal 账户邮箱' : 'Leave empty to use PayPal account email'}
+                  </p>
                 </div>
                 
                 <div className="mb-6">
