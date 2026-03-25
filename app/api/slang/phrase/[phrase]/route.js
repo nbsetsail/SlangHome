@@ -22,11 +22,7 @@ export async function GET(request, { params }) {
   let isPremium = false;
   if (activationCode) {
     try {
-      const codeResult = await executeQuery<{
-        count: number;
-        device_ids: string[];
-        expired_at: string;
-      }[]>(`
+      const codeResult = await executeQuery(`
         SELECT count, device_ids, expired_at FROM activation_codes WHERE code = $1
       `, [activationCode.toUpperCase()]);
       

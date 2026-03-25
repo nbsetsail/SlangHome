@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import Header from '@/components/Header'
 import { useLocale } from '@/hooks'
 import { useTheme } from '@/contexts/ThemeContext'
@@ -18,7 +18,7 @@ const supportTiers = [
 ]
 
 const MIN_AMOUNT = 3
-const MAX_AMOUNT = 100
+const MAX_AMOUNT = 99
 
 export default function SupportPage() {
   const locale = useLocale()
@@ -30,11 +30,17 @@ export default function SupportPage() {
   const [error, setError] = useState<string | null>(null)
   const [paypalReady, setPaypalReady] = useState(false)
   
+  const currentAmountRef = useRef(4.99)
+  
   const isZh = locale === 'zh'
   const tierAmount = supportTiers.find(t => t.id === selectedTier)?.amount || 0
   const customNum = parseFloat(customAmount) || 0
   const hasValidCustomAmount = customNum >= MIN_AMOUNT && customNum <= MAX_AMOUNT
   const currentAmount = hasValidCustomAmount ? customNum : tierAmount
+  
+  useEffect(() => {
+    currentAmountRef.current = currentAmount
+  }, [currentAmount])
   
   useEffect(() => {
     const script = document.createElement('script')
@@ -54,60 +60,68 @@ export default function SupportPage() {
       if (container) {
         container.innerHTML = ''
         
-        window.paypal.Buttons({
-          createOrder: (data: any, actions: any) => {
-            return actions.order.create({
-              purchase_units: [{
-                amount: {
-                  value: currentAmount.toString()
-                },
-                description: `Slang Home Support - $${currentAmount}`
-              }]
-            })
-          },
-          onApprove: async (data: any, actions: any) => {
-            setLoading(true)
-            setError(null)
-            
-            try {
-              const details = await actions.order.capture()
-              const payerEmail = details.payer?.email_address || ''
-              
-              const response = await fetch('/api/payment', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  data: {
-                    email: payerEmail,
-                    amount: currentAmount.toString(),
-                    currency: 'USD',
-                    transaction_id: details.id
-                  }
-                })
+        try {
+          window.paypal.Buttons({
+            createOrder: (data: any, actions: any) => {
+              return actions.order.create({
+                purchase_units: [{
+                  amount: {
+                    value: currentAmountRef.current.toString()
+                  },
+                  description: `Slang Home Support - $${currentAmountRef.current}`
+                }]
               })
+            },
+            onApprove: async (data: any, actions: any) => {
+              setLoading(true)
+              setError(null)
               
-              const result = await response.json()
-              
-              if (result.success && result.code) {
-                setActivationCode(result.code)
-              } else {
-                throw new Error(result.error || 'Failed to generate code')
+              try {
+                const details = await actions.order.capture()
+                const payerEmail = details.payer?.email_address || ''
+                
+                const response = await fetch('/api/payment', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    data: {
+                      email: payerEmail,
+                      amount: currentAmountRef.current.toString(),
+                      currency: 'USD',
+                      transaction_id: details.id
+                    }
+                  })
+                })
+                
+                const result = await response.json()
+                
+                if (result.success && result.code) {
+                  setActivationCode(result.code)
+                } else {
+                  throw new Error(result.error || 'Failed to generate code')
+                }
+              } catch (err) {
+                console.error('Payment error:', err)
+                setError(isZh ? '生成激活码失败，请联系支持' : 'Failed to generate code, please contact support')
+              } finally {
+                setLoading(false)
               }
-            } catch (err) {
-              console.error('Payment error:', err)
-              setError(isZh ? '生成激活码失败，请联系支持' : 'Failed to generate code, please contact support')
-            } finally {
-              setLoading(false)
+            },
+            onError: (err: any) => {
+              console.error('PayPal error:', err)
+              setError(isZh ? '支付失败，请重试' : 'Payment failed, please try again')
             }
-          },
-          onError: (err: any) => {
-            console.error('PayPal error:', err)
-            setError(isZh ? '支付失败，请重试' : 'Payment failed, please try again')
-          }
-        }).render('#paypal-button-container')
+          }).render('#paypal-button-container')
+        } catch (err) {
+          console.error('PayPal render error:', err)
+        }
       }
     }
-  }, [paypalReady, currentAmount, activationCode, isZh])
+  }, [paypalReady, activationCode, isZh])
+  
+  const handleAmountChange = (newAmount: string) => {
+    setCustomAmount(newAmount)
+  }
   
   const copyCode = () => {
     if (activationCode) {
@@ -223,7 +237,7 @@ export default function SupportPage() {
                         } else {
                           setError(null)
                         }
-                        setCustomAmount(e.target.value)
+                        handleAmountChange(e.target.value)
                       }}
                       placeholder={`${MIN_AMOUNT}.00 - ${MAX_AMOUNT}.00`}
                       className={`w-full pl-8 pr-4 py-2 rounded-lg border ${cn.colors.border.default} ${cn.colors.bg.card} focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
