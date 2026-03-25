@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { smartInsert } from '@/lib/db';
+import { smartInsert } from '@/lib/db-adapter';
 import { emailService } from '@/lib/email';
 import { getUTCTimestamp } from '@/lib/date-utils';
 
@@ -135,17 +135,15 @@ export async function POST(request: NextRequest) {
     
     console.log(`[Payment] Generated code ${activationCode} for ${email}, amount: ${amount} ${currency}`);
     
-    const amountDisplay = currency === 'USD' ? `$${amount}` : `${amount} ${currency}`;
-    const emailSent = await sendActivationCodeEmail(email, activationCode, amountDisplay);
-    
-    if (!emailSent) {
-      console.error('[Payment] Failed to send email');
-    }
+    // const amountDisplay = currency === 'USD' ? `$${amount}` : `${amount} ${currency}`;
+    // const emailSent = await sendActivationCodeEmail(email, activationCode, amountDisplay);
+    // if (!emailSent) {
+    //   console.error('[Payment] Failed to send email');
+    // }
     
     return NextResponse.json({ 
       success: true, 
-      code: activationCode,
-      emailSent 
+      code: activationCode
     });
     
   } catch (error) {
