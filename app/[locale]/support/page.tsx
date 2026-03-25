@@ -12,7 +12,7 @@ declare global {
 }
 
 const supportTiers = [
-  { id: 'coffee', amount: 4.99, name: 'Coffee', nameZh: '一杯咖啡', icon: '☕' , highlight: true},
+  { id: 'coffee', amount: 4.99, name: 'Coffee', nameZh: '一杯咖啡', icon: '☕' },
   { id: 'lunch', amount: 9.99, name: 'Lunch', nameZh: '一顿午餐', icon: '🍔' },
   { id: 'premium', amount: 19.99, name: 'Premium', nameZh: '高级支持', icon: '⭐' }
 ]
@@ -23,7 +23,7 @@ const MAX_AMOUNT = 100
 export default function SupportPage() {
   const locale = useLocale()
   const { cn } = useTheme()
-  const [selectedTier, setSelectedTier] = useState('premium')
+  const [selectedTier, setSelectedTier] = useState('coffee')
   const [customAmount, setCustomAmount] = useState('')
   const [activationCode, setActivationCode] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
@@ -33,7 +33,8 @@ export default function SupportPage() {
   const isZh = locale === 'zh'
   const tierAmount = supportTiers.find(t => t.id === selectedTier)?.amount || 0
   const customNum = parseFloat(customAmount) || 0
-  const currentAmount = customAmount ? Math.min(Math.max(customNum, MIN_AMOUNT), MAX_AMOUNT) : tierAmount
+  const hasValidCustomAmount = customNum >= MIN_AMOUNT && customNum <= MAX_AMOUNT
+  const currentAmount = hasValidCustomAmount ? customNum : tierAmount
   
   useEffect(() => {
     const script = document.createElement('script')
@@ -185,10 +186,9 @@ export default function SupportPage() {
                       }}
                       className={`
                         p-4 rounded-lg border-2 transition-all text-center
-                        ${selectedTier === tier.id 
+                        ${selectedTier === tier.id && !hasValidCustomAmount
                           ? 'border-orange-500 bg-orange-50 dark:bg-orange-900/20' 
                           : `border-gray-200 dark:border-gray-700 hover:border-orange-300`}
-                        ${tier.highlight ? 'ring-2 ring-orange-500 ring-offset-2' : ''}
                       `}
                     >
                       <div className="text-2xl mb-1">{tier.icon}</div>
@@ -224,7 +224,6 @@ export default function SupportPage() {
                           setError(null)
                         }
                         setCustomAmount(e.target.value)
-                        setSelectedTier('')
                       }}
                       placeholder={`${MIN_AMOUNT}.00 - ${MAX_AMOUNT}.00`}
                       className={`w-full pl-8 pr-4 py-2 rounded-lg border ${cn.colors.border.default} ${cn.colors.bg.card} focus:ring-2 focus:ring-orange-500 focus:border-transparent`}
