@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
 import { rateLimitStore } from './kv-store';
-import { getConfig, configKeys } from './system-config';
 
 export interface RateLimitConfig {
   windowMs: number;
@@ -39,6 +38,10 @@ const defaultConfigs: RateLimitConfigs = {
 
 export type RateLimitType = keyof typeof defaultConfigs;
 
+function isEdgeRuntime(): boolean {
+  return process.env.NEXT_RUNTIME === 'edge';
+}
+
 function getClientIdentifier(request: Request): string {
   const forwarded = request.headers.get('x-forwarded-for');
   if (forwarded) {
@@ -63,8 +66,16 @@ export async function checkRateLimit(
   identifier: string,
   customConfig?: Partial<RateLimitConfig>
 ): Promise<RateLimitResult> {
-  const configs = await getConfig<RateLimitConfigs>(configKeys.rateLimit);
-  const dbConfig = configs?.[type] || defaultConfigs[type] || defaultConfigs.default;
+  let dbConfig: DbRateLimitConfig;
+  
+  if (isEdgeRuntime()) {
+    dbConfig = defaultConfigs[type] || defaultConfigs.default;
+  } else {
+    const { getConfig, configKeys } = await import('./system-config');
+    const configs = await getConfig<RateLimitConfigs>(configKeys.rateLimit);
+    dbConfig = configs?.[type] || defaultConfigs[type] || defaultConfigs.default;
+  }
+  
   const config = {
     windowMs: dbConfig.windowMs,
     max: dbConfig.maxRequests,

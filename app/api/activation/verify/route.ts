@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       count: number;
       device_ids: string[];
       expired_at: string;
-    }[]>(`
+    }>(`
       SELECT id, code, count, device_ids, expired_at FROM activation_codes WHERE code = $1
     `, [normalizedCode]);
     
@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   const result = await executeQuery<{
     count: number;
     expired_at: string;
-  }[]>(`SELECT count, expired_at FROM activation_codes WHERE code = $1`, [code.toUpperCase()]);
+  }>(`SELECT count, expired_at FROM activation_codes WHERE code = $1`, [code.toUpperCase()]);
   
   if (result.length === 0) {
     return NextResponse.json({ valid: false, exists: false });

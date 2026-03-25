@@ -14,7 +14,7 @@ export async function createActivationCodesTable() {
   console.log('✅ activation_codes表创建成功');
 }
 
-export async function generateCode(): Promise<string> {
+export async function generateCode(): Promise<string | null> {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code = '';
   for (let j = 0; j < 12; j++) {
@@ -22,22 +22,22 @@ export async function generateCode(): Promise<string> {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   
-  const result = await executeQuery<{ code: string }[]>(
+  const result = await executeQuery<{ code: string }>(
     `INSERT INTO activation_codes (code) VALUES ($1) ON CONFLICT DO NOTHING RETURNING code`,
     [code]
   );
   
-  return result.rows[0]?.code : null;
+  return result[0]?.code ?? null;
 }
 
 export async function generateCodes(count: number = 10) {
   const codes: string[] = [];
   for (let i = 0; i < count; i++) {
     const code = await generateCode();
-    codes.push(code);
+    if (code) codes.push(code);
   }
   
-  console.log(`✅ Generated ${count} codes:`);
+  console.log(`✅ Generated ${codes.length} codes:`);
   codes.forEach(c => console.log(`  ${c}`));
   return codes;
 }
